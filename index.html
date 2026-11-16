@@ -4,19 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffb7d5">
-  <meta name="description" content="PIXEL DIARY：我的粉色像素小宇宙，日記、扭蛋、記帳與接星星。">
-  <title>PIXEL DIARY ♡</title>
+  <meta name="description" content="PIXEL DIARY 2.0：心情日記、心情月曆與月份回顧，收藏每一天的自己。">
+  <title>PIXEL DIARY 2.0 ♡ 心情日記</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./style.css">
+  <script src="./mood-core.js" defer></script>
   <script src="./script.js" defer></script>
+  <script src="./mood.js" defer></script>
 </head>
 <body>
   <div class="ambient ambient-a" aria-hidden="true">✦</div><div class="ambient ambient-b" aria-hidden="true">♡</div>
   <div class="shell">
     <header class="topbar">
-      <div><span class="pixel-kicker">★ MY LITTLE UNIVERSE ★</span><h1>PIXEL <span>DIARY</span> ♡</h1></div>
+      <div><span class="pixel-kicker">★ VERSION 2.0 / MOOD GARDEN ★</span><h1>PIXEL <span>DIARY</span> ♡</h1></div>
       <button id="soundToggle" class="icon-btn" type="button" aria-label="切換遊戲音效" aria-pressed="false">♪ OFF</button>
     </header>
     <div class="screen">
@@ -26,9 +28,10 @@
           <div class="hero card">
             <div class="tiny-line">♡ WELCOME HOME ♡</div>
             <div class="hero-art" aria-hidden="true"><span class="sparkle sp1">✦</span><span class="sparkle sp2">✧</span><div class="pixel-friend"><i class="eye left"></i><i class="eye right"></i><i class="blush left"></i><i class="blush right"></i><i class="smile"></i></div></div>
-            <h2 id="homeHeading">今天也要閃閃發光！</h2>
-            <p id="greeting">這是只屬於你的粉色小宇宙 ♡</p>
+            <h2 id="homeHeading">每一種心情，都值得收藏。</h2>
+            <p id="greeting">在粉色小宇宙，留下一點今天的自己 ♡</p>
           </div>
+          <button class="mood-home card" data-go="mood" type="button"><span class="mood-home-label">NEW / 每日心情花園</span><strong>今天的你，過得好嗎？ 🌷</strong><span id="moodStatus">今天，想用什麼表情記住自己？</span><b>記錄心情・看看月曆 ↗</b></button>
           <div class="home-grid">
             <button class="feature-card peach" data-go="gacha"><span class="feature-emoji">🎰</span><strong>每日扭蛋</strong><small id="gachaStatus">今天的驚喜待領取</small><b>OPEN ↗</b></button>
             <button class="feature-card lilac" data-go="notes"><span class="feature-emoji">📝</span><strong>我的小紙條</strong><small id="noteStatus">寫下心裡的小事</small><b>WRITE ↗</b></button>
@@ -36,6 +39,29 @@
             <button class="feature-card yellow" data-go="game"><span class="feature-emoji">⭐</span><strong>接星星</strong><small>60 秒療癒小遊戲</small><b>PLAY ↗</b></button>
           </div>
           <div class="footer-note">✿ little things make lovely days ✿</div>
+        </section>
+
+
+        <section id="mood" class="view" aria-labelledby="moodHeading">
+          <div class="section-intro"><span class="pixel-kicker">NEW / MY MOOD GARDEN</span><h2 id="moodHeading">我的心情花園 🌷</h2><p>不用每天都開心，每一天的你都值得被記住。</p></div>
+          <form id="moodForm" class="card form-card">
+            <div class="mood-form-title"><h3>收藏這一天</h3><button id="moodToday" class="secondary-btn" type="button">回到今天</button></div>
+            <label for="moodDate">紀錄日期</label><input id="moodDate" type="date" required>
+            <fieldset class="mood-fieldset"><legend>今天最接近哪一種心情？</legend><div id="moodChoices" class="mood-choices"></div></fieldset>
+            <input id="moodValue" type="hidden"><p id="moodHint" class="mood-hint" aria-live="polite"></p>
+            <label for="moodText">給這天的自己一句話（選填）</label><textarea id="moodText" maxlength="300" rows="3" placeholder="例如：今天和朋友散步，感覺充滿電了。"></textarea><div id="moodLength" class="mood-length">0 / 300</div>
+            <p class="muted small">一天保留一筆心情，再次儲存會更新這天的紀錄。</p>
+            <div class="form-actions"><button id="moodDelete" class="secondary-btn hidden" type="button">刪除紀錄</button><button id="moodSave" class="primary-btn" type="submit">♡ 收藏這天的心情</button></div>
+          </form>
+          <div class="card mood-calendar-card">
+            <span class="pixel-kicker">A MONTH OF LITTLE FEELINGS</span><h3 id="calendarTitle">心情月曆</h3>
+            <div class="month-controls"><button id="monthPrev" class="secondary-btn" type="button" aria-label="上一個月">←</button><label class="sr-only" for="monthPicker">查看月份</label><input id="monthPicker" type="month" required><button id="monthNext" class="secondary-btn" type="button" aria-label="下一個月">→</button></div>
+            <p class="muted small">點選日期，回顧或補寫那一天。紫色外框為選取日，小圓點為今天。</p>
+            <div class="calendar-weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div><div id="moodCalendar" class="mood-calendar" role="group" aria-label="心情月曆"></div>
+          </div>
+          <div class="stat-grid"><div class="stat peach"><small>這個月記錄了</small><strong id="moodMonthCount">0 天</strong></div><div class="stat mint"><small>累計收藏了</small><strong id="moodTotalCount">0 天</strong></div></div>
+          <div class="card"><h3>這個月的心情色彩</h3><div id="moodDistribution"></div><p id="moodSummaryHint" class="muted small"></p></div>
+          <h3 class="list-heading">✦ 本月心情手札</h3><div id="moodEntries" class="stack"></div><p class="muted small">紀錄只留在這個瀏覽器，記得至 DATA 匯出備份。月份回顧僅整理你填寫的紀錄。</p>
         </section>
 
         <section id="gacha" class="view" aria-labelledby="gachaHeading">
@@ -59,12 +85,13 @@
 
         <section id="game" class="view" aria-labelledby="gameHeading"><div class="section-intro"><span class="pixel-kicker">04 / MINI ARCADE</span><h2 id="gameHeading">星星收集大作戰 ⭐</h2><p>滑動粉色像素小人，接住從天空掉下來的星星！</p></div><div class="game-hud"><span>⭐ SCORE <b id="score">000</b></span><span>⏳ TIME <b id="timer">60</b>s</span></div><div class="game-board-wrap"><canvas id="gameCanvas" width="336" height="420" aria-label="接星星遊戲區；手機可觸控滑動，電腦使用左右方向鍵"></canvas><div id="gameOverlay" class="game-overlay"><span class="overlay-star">⭐</span><h3 id="gameOverlayTitle">READY TO SHINE?</h3><p id="gameOverlayText">漏接也沒關係，開心最重要 ♡</p><button id="gameStart" type="button" class="primary-btn">▶ START GAME</button></div></div><p class="game-help">⇆ 手指左右滑動／鍵盤 ← → 移動・普通星 +10・彩虹星 +30</p><div class="card best-record">🏆 最高分 <strong id="bestScore">0</strong></div></section>
 
-        <section id="settings" class="view" aria-labelledby="settingsHeading"><div class="section-intro"><span class="pixel-kicker">05 / MY SETTINGS</span><h2 id="settingsHeading">我的小設定 ⚙️</h2><p>把重要的記憶帶在身邊。</p></div><div class="card form-card"><h3>💾 資料備份</h3><p class="muted">資料儲存在這台裝置的瀏覽器。清除網站資料可能會遺失紀錄，請定期備份。</p><button id="exportBtn" class="primary-btn full" type="button">↓ 匯出 JSON 備份</button><label class="file-btn" for="importFile">↑ 匯入 JSON 備份</label><input class="sr-only" id="importFile" type="file" accept="application/json,.json"><p class="muted small">匯入會取代目前的筆記、記帳、扭蛋紀錄及最高分；匯入前請先匯出備份。</p></div><div class="footer-note">MADE WITH ♡ PIXELS</div></section>
+        <section id="settings" class="view" aria-labelledby="settingsHeading"><div class="section-intro"><span class="pixel-kicker">05 / MY SETTINGS</span><h2 id="settingsHeading">我的小設定 ⚙️</h2><p>把重要的記憶帶在身邊。</p></div><div class="card form-card"><h3>💾 資料備份</h3><p class="muted">資料儲存在這台裝置的瀏覽器。清除網站資料可能會遺失紀錄，請定期備份。</p><button id="exportBtn" class="primary-btn full" type="button">↓ 匯出 JSON 備份</button><label class="file-btn" for="importFile">↑ 匯入 JSON 備份</label><input class="sr-only" id="importFile" type="file" accept="application/json,.json"><p class="muted small">匯入會取代目前的心情日記、筆記、記帳、扭蛋紀錄及最高分；匯入舊版備份時，心情紀錄會清空；匯入前請先匯出備份。</p></div><div class="footer-note">MADE WITH ♡ PIXELS</div></section>
       </main>
     </div>
-    <nav class="bottom-nav" aria-label="功能切換"><button data-go="home" class="nav-btn active" type="button"><span>⌂</span>HOME</button><button data-go="gacha" class="nav-btn" type="button"><span>◈</span>GACHA</button><button data-go="notes" class="nav-btn" type="button"><span>✎</span>MEMO</button><button data-go="money" class="nav-btn" type="button"><span>＄</span>MONEY</button><button data-go="game" class="nav-btn" type="button"><span>★</span>GAME</button><button data-go="settings" class="nav-btn" type="button"><span>⚙</span>DATA</button></nav>
+    <nav class="bottom-nav" aria-label="功能切換"><button data-go="home" class="nav-btn active" type="button"><span>⌂</span>HOME</button><button data-go="mood" class="nav-btn" type="button"><span>♡</span>MOOD</button><button data-go="gacha" class="nav-btn" type="button"><span>◈</span>GACHA</button><button data-go="notes" class="nav-btn" type="button"><span>✎</span>MEMO</button><button data-go="money" class="nav-btn" type="button"><span>＄</span>MONEY</button><button data-go="game" class="nav-btn" type="button"><span>★</span>GAME</button><button data-go="settings" class="nav-btn" type="button"><span>⚙</span>DATA</button></nav>
     <div class="device-bottom" aria-hidden="true"><span>✚</span><span>◉ ◉</span></div>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
+

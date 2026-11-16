@@ -11,7 +11,7 @@ const ITEMS = [
   {id:"rainbow",name:"彩虹糖",icon:"🌈",rarity:"稀有",quote:"雨後的小確幸正在路上。"},
   {id:"moon",name:"夢幻月",icon:"🌙",rarity:"超稀有",quote:"把願望交給夜空，明天繼續努力。"}
 ];
-const defaultData = () => ({notes:[],expenses:[],gacha:{date:"",collection:{},last:null},best:0,sound:false});
+const defaultData = () => ({moods:[],notes:[],expenses:[],gacha:{date:"",collection:{},last:null},best:0,sound:false});
 function validRecord(a, fields){return Array.isArray(a)&&a.length<=10000&&a.every(x=>x&&typeof x==="object"&&fields.every(f=>typeof x[f]==="string"));}
 function normalize(input){
   if(!input || typeof input!=="object" || Array.isArray(input)) throw Error("資料格式不正確");
@@ -21,7 +21,7 @@ function normalize(input){
   if(expenses.some(e=>!Number.isFinite(e.amount)||e.amount<0||e.amount>999999999))throw Error("花費金額不正確");
   const g=input.gacha&&typeof input.gacha==="object"?input.gacha:{};
   const collection={};for(const item of ITEMS){const n=Number(g.collection?.[item.id]);if(Number.isSafeInteger(n)&&n>=1&&n<=100000)collection[item.id]=n;}
-  return {notes,expenses,gacha:{date:typeof g.date==="string"?g.date.slice(0,10):"",collection,last:typeof g.last==="string"?g.last:null},best:Number.isSafeInteger(input.best)&&input.best>=0?input.best:0,sound:input.sound===true};
+  return {moods:MoodDiary.normalize(input.moods),notes,expenses,gacha:{date:typeof g.date==="string"?g.date.slice(0,10):"",collection,last:typeof g.last==="string"?g.last:null},best:Number.isSafeInteger(input.best)&&input.best>=0?input.best:0,sound:input.sound===true};
 }
 function load(){try{const raw=localStorage.getItem(KEY);return raw?normalize(JSON.parse(raw)):defaultData();}catch{return defaultData();}}
 let data=load();
@@ -52,7 +52,7 @@ $("expenseForm").addEventListener("submit",e=>{e.preventDefault();const title=$(
 function renderExpenses(){const today=localDate(),month=today.slice(0,7),total=predicate=>data.expenses.filter(predicate).reduce((s,e)=>s+e.amount,0);$("todayTotal").textContent=money(total(e=>e.date===today));$("monthTotal").textContent=money(total(e=>e.date.startsWith(month)));$("moneyStatus").textContent=`今日花費 ${$("todayTotal").textContent}`;$("expenseCount").textContent=`${data.expenses.length} 筆`;const root=$("expensesList");root.replaceChildren();if(!data.expenses.length){root.append(el("div","empty","🪙 還沒有花費，記下第一筆吧！"));return;}[...data.expenses].sort((a,b)=>b.date.localeCompare(a.date)).forEach(x=>{const box=el("article","record"),head=el("div","record-head"),actions=el("div","record-actions"),edit=el("button",null,"編輯"),del=el("button",null,"刪除");head.append(el("h4",null,x.title),el("time",null,x.date));box.append(head,el("p",null,`${x.category} · ${money(x.amount)}`));edit.type=del.type="button";edit.addEventListener("click",()=>{$("expenseEditId").value=x.id;$("expenseTitle").value=x.title;$("expenseAmount").value=x.amount;$("expenseDate").value=x.date;$("expenseCategory").value=x.category;$("expenseSave").textContent="♡ 儲存修改";$("expenseCancel").classList.remove("hidden");$("expenseForm").scrollIntoView({behavior:"smooth"});});del.addEventListener("click",()=>{if(!confirm(`確定刪除「${x.title}」？`))return;data.expenses=data.expenses.filter(e=>e.id!==x.id);save();renderExpenses();});actions.append(edit,del);box.append(actions);root.append(box);});}
 
 // Backup: only schema-validated JSON replaces browser data.
-$("exportBtn").addEventListener("click",()=>{const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),...data},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`pixel-diary-${localDate()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("備份已匯出 ♡");});
+$("exportBtn").addEventListener("click",()=>{const blob=new Blob([JSON.stringify({version:2,exportedAt:new Date().toISOString(),...data},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`pixel-diary-${localDate()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("備份已匯出 ♡");});
 $("importFile").addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>5_000_000)throw Error("檔案過大（上限 5 MB）");const next=normalize(JSON.parse(await file.text()));if(!confirm("匯入將取代目前所有資料，確定繼續？"))return;data=next;save();renderAll();toast("備份已匯入！");}catch(err){toast(`匯入失敗：${err.message}`);}finally{e.target.value="";}});
 
 // Star Catcher - 336 x 420 coordinate system, fixed 60-second cozy mode.
@@ -70,7 +70,8 @@ $("gameStart").addEventListener("click",()=>{running=true;frame=0;last=0;elapsed
 function movePointer(e){if(!running)return;const rect=canvas.getBoundingClientRect();playerX=clamp((e.clientX-rect.left)/rect.width*W,21,W-21);}
 canvas.addEventListener("pointerdown",e=>{if(running){canvas.setPointerCapture(e.pointerId);movePointer(e);}});canvas.addEventListener("pointermove",e=>{if(running&&e.buttons)movePointer(e);});
 window.addEventListener("keydown",e=>{if(!running||document.activeElement.matches("input,textarea,select"))return;if(e.key==="ArrowLeft"||e.key==="ArrowRight")e.preventDefault();if(e.key==="ArrowLeft")leftHeld=true;if(e.key==="ArrowRight")rightHeld=true;});window.addEventListener("keyup",e=>{if(e.key==="ArrowLeft")leftHeld=false;if(e.key==="ArrowRight")rightHeld=false;});window.addEventListener("blur",()=>{leftHeld=rightHeld=false;});
-function renderAll(){$("todayLabel").textContent=new Date().toLocaleDateString("zh-TW",{month:"long",day:"numeric",weekday:"short"});$("soundToggle").textContent=data.sound?"♫ ON":"♪ OFF";$("soundToggle").setAttribute("aria-pressed",String(data.sound));$("bestScore").textContent=data.best;renderGacha();renderNotes();renderExpenses();}
+function renderAll(){$("todayLabel").textContent=new Date().toLocaleDateString("zh-TW",{month:"long",day:"numeric",weekday:"short"});$("soundToggle").textContent=data.sound?"♫ ON":"♪ OFF";$("soundToggle").setAttribute("aria-pressed",String(data.sound));$("bestScore").textContent=data.best;renderGacha();renderNotes();renderExpenses();window.dispatchEvent(new Event("pixel-data-change"));}
 resetNote();resetExpense();renderAll();drawGame(0);
 // Update date-based affordances when returning after midnight.
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){$("todayLabel").textContent=new Date().toLocaleDateString("zh-TW",{month:"long",day:"numeric",weekday:"short"});renderGacha();renderExpenses();}});
+
